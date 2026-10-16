@@ -2,6 +2,7 @@
    ULTRA TETRIS 3D — HUD, menus and overlays
    ========================================================================== */
 :root {
+  color-scheme: dark;
   --primary: #00e5ff;
   --secondary: #ff2bd6;
   --amber: #ffae2b;
