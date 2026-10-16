@@ -59,6 +59,8 @@ Fly into floating orbs, clear glowing power cores inside pieces or land big clea
 
 No build step. Everything is plain ES modules loaded by `index.html`, with three.js r160 from jsDelivr. Serve the folder with any static server, for example `npx serve .`, and open it in a browser. Add `?debug=1` to expose a test API on `window.__ULTRA__`.
 
+When you deploy changes to `style.css` or `src/`, bump the `?v=` number on both URLs in `index.html` so returning players don't get a stale cached copy mixed with the new page.
+
 ```
 src/
   main.js          boot, input, pointer lock, screen flow, main loop
