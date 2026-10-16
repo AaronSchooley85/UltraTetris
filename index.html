@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ULTRA TETRIS 3D — Jetpack &amp; Plasma Beacon Arena</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="game-canvas-container"></div>
+  <div id="visor-overlay"></div>
+
+  <!-- Dynamic Crosshair & Surface Segment Targeter -->
+  <div id="reticle-container">
+    <div class="reticle-ring">
+      <div class="reticle-center-dot"></div>
+    </div>
+    <div class="reticle-label" id="reticle-label">SCANNING SURFACE</div>
+  </div>
+
+  <!-- Center Event Notification Banner -->
+  <div id="event-banner">
+    <div class="banner-main" id="banner-main">PLASMA TETHER LOCKED</div>
+    <div class="banner-sub" id="banner-sub">ALIGNING MEGA-BLOCK COLUMN</div>
+  </div>
+
+  <!-- Heads-Up Display -->
+  <div id="hud">
+    <div class="hud-top">
+      <!-- Left Panel: Telemetry & Score -->
+      <div class="hud-panel">
+        <div class="hud-title">ARENA TELEMETRY // SECTOR 04</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">SCORE</span>
+            <span class="stat-value" id="hud-score">004,800</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">LEVEL</span>
+            <span class="stat-value accent-gold" id="hud-level">04</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">LINES</span>
+            <span class="stat-value accent-magenta" id="hud-lines">12</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Panel: Dual Beacon & Plasma Alignment Status -->
+      <div class="hud-panel beacon-status-panel">
+        <div class="beacon-slot" id="slot-sky-beacon">
+          <div class="beacon-dot"></div>
+          <div class="beacon-info">
+            <span class="beacon-name">SKY PIECE BEACON</span>
+            <span class="beacon-coord" id="sky-beacon-text">UNATTACHED</span>
+          </div>
+        </div>
+
+        <div class="plasma-bridge-indicator" id="plasma-bridge-status">
+          AWAITING BEACONS
+        </div>
+
+        <div class="beacon-slot" id="slot-ground-beacon">
+          <div class="beacon-dot"></div>
+          <div class="beacon-info">
+            <span class="beacon-name">SURFACE ANCHOR BEACON</span>
+            <span class="beacon-coord" id="ground-beacon-text">UNATTACHED</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Camera & Next Piece Info -->
+      <div class="hud-panel">
+        <div class="hud-title">NEXT MEGA-TETROMINO</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">CLASS</span>
+            <span class="stat-value accent-gold" id="hud-next-piece">L-HYPER</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">ALTITUDE</span>
+            <span class="stat-value" id="hud-piece-alt">78m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom HUD: Jetpack & Controls -->
+    <div class="hud-bottom">
+      <div class="hud-panel jetpack-gauge-wrap">
+        <div class="jetpack-row">
+          <span>JETPACK THRUSTERS</span>
+          <span id="jetpack-mode-label">AUTO-GLIDE DESCENT</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="jetpack-bar"></div>
+        </div>
+        <div class="jetpack-row">
+          <span id="player-alt-label">PLAYER ALT: 0.0m</span>
+          <span id="camera-mode-label">VIEW: 1ST PERSON [V]</span>
+        </div>
+      </div>
+
+      <div class="hud-panel controls-strip">
+        <div class="key-hint"><span class="kbd">LMB</span> Shoot Beacon (Sky Piece / Placed Block)</div>
+        <div class="key-hint"><span class="kbd">RMB</span> Shoot Kinetic Rotation Blast</div>
+        <div class="key-hint"><span class="kbd">Q</span> / <span class="kbd">E</span> Shoot 3D Tilt Blast</div>
+        <div class="key-hint"><span class="kbd">F</span> Plasma Warp Drop</div>
+        <div class="key-hint"><span class="kbd">WASD</span> Move / Fly</div>
+        <div class="key-hint"><span class="kbd">SPACE</span> Jetpack Fly Up</div>
+        <div class="key-hint"><span class="kbd">X</span> Clear Beacons</div>
+        <div class="key-hint"><span class="kbd">V</span> 1st/3rd Person</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Start / Pause / Game Over Modal -->
+  <div id="modal-overlay">
+    <div class="modal-card">
+      <div class="game-logo" id="modal-title">ULTRA TETRIS 3D</div>
+      <div class="game-subtitle" id="modal-subtitle">House-Scale Blocks • 3D Jetpack Flight • Plasma Beacon Alignment</div>
+
+      <div class="how-to-grid">
+        <div class="step-card">
+          <div class="step-num">01 // FLY &amp; SCALE</div>
+          <div class="step-title">3D Jetpack Mobility</div>
+          <div class="step-desc">
+            You are human-sized (1.8m) inside a colossal neon space arena where each block segment is the size of a house (6m×6m×6m). Hold <b>SPACE</b> to fly up and release to glide gently back down.
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02 // TAG BEACONS</div>
+          <div class="step-title">Dual Beacon &amp; Torque Gun</div>
+          <div class="step-desc">
+            <b>Left-Click</b> shoots beacons onto placed blocks and the falling piece. <b>Right-Click</b> fires a kinetic blast that strikes the falling piece and rotates its heavy mass with inertia.
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03 // PLASMA LOCK</div>
+          <div class="step-title">Vertical Plasma Beam</div>
+          <div class="step-desc">
+            When both beacons are placed, a roaring <b>Plasma Energy Beam</b> links them and pulls the falling piece horizontally so the two beacons align vertically!
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-table">
+        <div class="ctrl-row"><span>Move / Strafe</span><span><b class="kbd">W A S D</b></span></div>
+        <div class="ctrl-row"><span>Shoot Beacon (Auto-detects Sky/Ground)</span><span><b class="kbd">Left Click</b></span></div>
+        <div class="ctrl-row"><span>Jetpack Fly Up (Release for Gentle Fall)</span><span><b class="kbd">SPACE</b></span></div>
+        <div class="ctrl-row"><span>Shoot Kinetic Rotation Blast (Yaw)</span><span><b class="kbd">Right Click</b> or <b class="kbd">R</b></span></div>
+        <div class="ctrl-row"><span>Shoot 3D Tilt Blast (Pitch / Roll)</span><span><b class="kbd">Q</b> / <b class="kbd">E</b></span></div>
+        <div class="ctrl-row"><span>Plasma Surge Drop (Fast Drop)</span><span><b class="kbd">F</b></span></div>
+        <div class="ctrl-row"><span>Switch 1st / 3rd Person Camera</span><span><b class="kbd">V</b></span></div>
+        <div class="ctrl-row"><span>Detach Beacons</span><span><b class="kbd">X</b></span></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary" id="btn-start-reference">LAUNCH ARENA (REFERENCE FORMATION)</button>
+        <button class="btn-secondary" id="btn-start-clean">NEW EMPTY BOARD</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+    window.__THREE_DEPS__ = { THREE, EffectComposer, RenderPass, UnrealBloomPass };
+    const script = document.createElement('script');
+    script.src = 'game.js';
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
